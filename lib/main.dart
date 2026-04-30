@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:masroofy/features/security/pin_screen.dart';
 
 import 'app.dart';
 import 'features/security/repositories/security_repository.dart';
