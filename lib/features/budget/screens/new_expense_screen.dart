@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:masroofy/features/budget/controllers/new_expense_screen_controller.dart';
 import 'package:masroofy/utils/constants/sizes.dart';
 import 'package:get/get.dart';
-import 'package:masroofy/common/animations/controllers/new_expense_screen_controller.dart';
 
 class NewExpenseScreen extends StatelessWidget {
   const NewExpenseScreen({super.key});

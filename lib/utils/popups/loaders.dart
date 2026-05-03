@@ -82,7 +82,7 @@ class Loaders {
     );
   }
 
-  static warningSnackBar({required title, message = ''}) {
+  static void warningSnackBar({required title, message = ''}) {
     if (Get.context == null) {
       return;
     }

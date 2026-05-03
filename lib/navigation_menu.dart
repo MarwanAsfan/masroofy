@@ -5,8 +5,6 @@ import 'package:masroofy/features/budget/screens/home/dashboard_screen.dart';
 import 'package:masroofy/utils/constants/colors.dart';
 import 'package:masroofy/utils/helpers/helper_functions.dart';
 
-
-
 class NavigationMenu extends StatelessWidget {
   const NavigationMenu({super.key});
 
@@ -16,19 +14,25 @@ class NavigationMenu extends StatelessWidget {
     final darkMode = AppHelperFunctions.isDarkMode(context);
     return Scaffold(
       bottomNavigationBar: Obx(
-            () => NavigationBar(
+        () => NavigationBar(
           height: 80,
           elevation: 0,
           selectedIndex: controller.selectedIndex.value,
           onDestinationSelected: (index) =>
-          controller.selectedIndex.value = index,
+              controller.selectedIndex.value = index,
           backgroundColor: darkMode ? AppColors.black : AppColors.white,
           indicatorColor: darkMode
               ? AppColors.white.withAlpha(26)
               : AppColors.black.withAlpha(26),
           destinations: const [
-            NavigationDestination(icon: Icon(Icons.home_outlined), label: 'Home'),
-            NavigationDestination(icon: Icon(Icons.document_scanner_outlined), label: 'Reports'),
+            NavigationDestination(
+              icon: Icon(Icons.home_outlined),
+              label: 'Home',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.document_scanner_outlined),
+              label: 'Reports',
+            ),
           ],
         ),
       ),
@@ -40,9 +44,7 @@ class NavigationMenu extends StatelessWidget {
 class NavigationController extends GetxController {
   static NavigationController get instance => Get.find();
 
-  final Rx<int> selectedIndex =0.obs;
+  final Rx<int> selectedIndex = 0.obs;
 
-  final screens = [
-    const DashboardScreen()
-  ];
+  final screens = [const DashboardScreen()];
 }

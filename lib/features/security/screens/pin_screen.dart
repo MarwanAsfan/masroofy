@@ -1,7 +1,11 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:masroofy/features/security/controllers/pin_controller.dart';
+import 'package:masroofy/utils/constants/colors.dart';
+import 'package:masroofy/utils/constants/sizes.dart';
+import 'package:masroofy/utils/helpers/helper_functions.dart';
 
-class PinScreen extends StatefulWidget {
+class PinScreen extends StatelessWidget {
   final String title;
   final String subtitle;
   final void Function(String pin)? onPinEntered;
@@ -14,109 +18,92 @@ class PinScreen extends StatefulWidget {
   });
 
   @override
-  State<PinScreen> createState() => _PinScreenState();
-}
-
-class _PinScreenState extends State<PinScreen> {
-  String _pin = '';
-  bool _isLoading = false;
-  String _dots = '';
-  Timer? _timer;
-
-  void _startLoading() {
-    setState(() => _isLoading = true);
-    _timer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
-      setState(() {
-        _dots = _dots.length >= 3 ? '' : '$_dots.';
-      });
-    });
-  }
-
-  void _stopLoading() {
-    _timer?.cancel();
-    setState(() {
-      _isLoading = false;
-      _dots = '';
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  void _onKeyPressed(String value) {
-    if (_isLoading) return;
-    if (_pin.length < 4) {
-      setState(() => _pin += value);
-    }
-  }
-
-  void _onDelete() {
-    if (_isLoading) return;
-    if (_pin.isNotEmpty) {
-      setState(() => _pin = _pin.substring(0, _pin.length - 1));
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final controller = Get.put(PinController());
+    final dark = AppHelperFunctions.isDarkMode(context);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: dark ? AppColors.dark : AppColors.light,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
           child: Column(
             children: [
               const SizedBox(height: 40),
-              Text(
-                _isLoading ? "جاري التحقق$_dots" : widget.title,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 16, color: Colors.black54),
-              ),
-              const SizedBox(height: 6),
-              if (!_isLoading)
-                Text(
-                  widget.subtitle,
+              Obx(
+                () => Text(
+                  controller.isLoading.value
+                      ? "Verifying ${controller.dots.value}"
+                      : (controller.isSetup.value
+                            ? 'Create a 4 digit PIN'
+                            : title),
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 13, color: Colors.black38),
+                  style: Theme.of(context).textTheme.headlineMedium,
                 ),
-              const SizedBox(height: 32),
-              _PinDisplay(pin: _pin),
-              const SizedBox(height: 36),
-              _Keypad(
-                onKeyPressed: _onKeyPressed,
-                onDelete: _onDelete,
               ),
+              const SizedBox(height: AppSizes.spaceBtwItems / 2),
+              Obx(() {
+                if (!controller.isLoading.value) {
+                  return Text(
+                    controller.isSetup.value
+                        ? subtitle
+                        : 'Verify your identity',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  );
+                }
+                return SizedBox();
+              }),
+              const SizedBox(height: AppSizes.spaceBtwSections),
+
+              Obx(() => _PinDisplay(pin: controller.pin.value)),
+
+              const SizedBox(height: 36),
+
+              _Keypad(
+                onKeyPressed: controller.onKeyPressed,
+                onDelete: controller.onRemove,
+              ),
+
               const SizedBox(height: 32),
               SizedBox(
                 width: double.infinity,
                 height: 54,
-                child: ElevatedButton(
-                  onPressed: (_pin.length == 4 && !_isLoading)
-                      ? () {
-                    _startLoading();
-                    widget.onPinEntered?.call(_pin);
-                  }
-                      : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4CAF50),
-                    disabledBackgroundColor: const Color(0xFFB0BEC5),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                child: Obx(
+                  () => ElevatedButton(
+                    onPressed:
+                        (controller.pin.value.length == 4 &&
+                            !controller.isLoading.value)
+                        ? () {
+                            controller.startLoading();
+                            onPinEntered?.call(controller.pin.value);
+                          }
+                        : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4CAF50),
+                      disabledBackgroundColor: const Color(0xFFB0BEC5),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      elevation: 0,
                     ),
-                    elevation: 0,
-                  ),
-                  child: _isLoading
-                      ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                  )
-                      : const Text(
-                    'UNLOCK',
-                    style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600, letterSpacing: 1.5),
+                    child: controller.isLoading.value
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text(
+                            'UNLOCK',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 1.5,
+                            ),
+                          ),
                   ),
                 ),
               ),
@@ -130,16 +117,17 @@ class _PinScreenState extends State<PinScreen> {
 
 class _PinDisplay extends StatelessWidget {
   final String pin;
+
   const _PinDisplay({required this.pin});
 
   @override
   Widget build(BuildContext context) {
+    final dark = AppHelperFunctions.isDarkMode(context);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
       decoration: BoxDecoration(
-        color: const Color(0xFFFAFAFA),
-        border: Border.all(color: const Color(0xFFD0D0D0)),
+        color: dark ? AppColors.darkContainer : AppColors.grey,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -150,11 +138,7 @@ class _PinDisplay extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 10),
             child: Text(
               filled ? pin[index] : '–',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w600,
-                color: filled ? Colors.black87 : Colors.black26,
-              ),
+              style: Theme.of(context).textTheme.headlineMedium,
             ),
           );
         }),
@@ -181,13 +165,15 @@ class _Keypad extends StatelessWidget {
     return Column(
       children: keys.map((row) {
         return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.only(bottom: AppSizes.spaceBtwItems),
           child: Row(
             children: row.map((key) {
               if (key.isEmpty) return const Expanded(child: SizedBox());
               return Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSizes.spaceBtwItems,
+                  ),
                   child: _KeyButton(
                     label: key,
                     onTap: () => key == 'del' ? onDelete() : onKeyPressed(key),
@@ -210,23 +196,24 @@ class _KeyButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dark = AppHelperFunctions.isDarkMode(context);
     final isDelete = label == 'del';
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
       child: Container(
-        height: 62,
+        height: AppSizes.buttonHeight,
         decoration: BoxDecoration(
-          color: const Color(0xFFF5F5F5),
-          border: Border.all(color: const Color(0xFFE0E0E0)),
+          color: dark ? AppColors.darkContainer : AppColors.grey,
           borderRadius: BorderRadius.circular(14),
         ),
         alignment: Alignment.center,
         child: isDelete
-            ? const Icon(Icons.backspace_outlined, size: 22, color: Color(0xFF555555))
-            : Text(
-          label,
-          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w500, color: Color(0xFF222222)),
-        ),
+            ? Icon(
+                Icons.backspace_outlined,
+                size: 22,
+                color: dark ? AppColors.light : AppColors.dark,
+              )
+            : Text(label, style: Theme.of(context).textTheme.headlineMedium),
       ),
     );
   }

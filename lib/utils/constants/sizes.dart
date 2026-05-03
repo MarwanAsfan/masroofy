@@ -15,7 +15,7 @@ class AppSizes {
   static const fontSizeMd = 16.0;
   static const fontSizeLg = 18.0;
 
-  static const buttonHeight = 18.0;
+  static const buttonHeight = 64.0;
   static const buttonRadius = 12.0;
   static const buttonWidth = 120.0;
   static const buttonElevation = 4.0;
